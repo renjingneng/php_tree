@@ -38,23 +38,13 @@ class Tree
         $this->sourceKey   = $sourceKey;
     }
 
-    private function _sort(&$arr, $sortKey, $sortOrder)
-    {
-        $name = [];
-        foreach ($arr as $row) {
-            $name[] = $row[$sortKey];
-        }
-        array_multisort($name, $sortOrder, SORT_REGULAR, $arr);
-    }
-
-    private function _sort_new(&$subtree)
+    private function _sort(&$subtree)
     {
         foreach ($subtree as &$item) {
             if (isset($item[$this->childrenKey])) {
-                $this->_sort_new($item[$this->childrenKey]);
-            }else{
-                $name[] = $row[$this->sortKey];
+                $this->_sort($item[$this->childrenKey]);
             }
+            $name[] = $item[$this->sortKey];
         }
         array_multisort($name, $this->sortOrder, SORT_REGULAR, $subtree);
     }
@@ -96,14 +86,14 @@ class Tree
             if (isset($this->refer[$v[$this->parentKey]])) {
                 $parent                       =& $this->refer[$v[$this->parentKey]];//获取父分类的引用
                 $parent[$this->childrenKey][] =& $this->originalList[$k];//在父分类的children中再添加一个引用成员
-                if (!empty($this->sortKey)) {
-                    $this->_sort($parent[$this->childrenKey], $this->sortKey, $this->sortOrder);
-                }
             }
         }
+        $tree = $this->deepTree();
         if (!empty($this->pathKey)) {
-            $tree = $this->deepTree();
             $this->_path($tree);
+        }
+        if (!empty($this->sortKey)) {
+            $this->_sort($tree);
         }
     }
 
@@ -130,9 +120,6 @@ class Tree
         foreach ($this->originalList as $k => $v) {
             if ($v[$this->parentKey] == $root) {
                 $tree[] =& $this->originalList[$k];
-                if (!empty($this->sortKey)) {
-                    $this->_sort($tree, $this->sortKey, $this->sortOrder);
-                }
             }
         }
         return $tree;
